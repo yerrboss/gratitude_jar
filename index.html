@@ -284,10 +284,10 @@
           box-shadow 120ms ease,
           border-color 120ms ease,
           background 150ms ease;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 8px;
+        /* display: flex; */
+        /* justify-content: space-between; */
+        /* align-items: flex-start; */
+        /* gap: 8px; */
       }
 
       .note-list-main {
@@ -816,7 +816,7 @@ function renderList() {
       textDiv.innerHTML = `<p class="note-list-text">${escapeHtml(snippet(note.text, 100))}</p>`;
       textDiv.onclick = () => openNote(note._id);
 
-      // TIMESTAMP (middle - RIGHT of text, LEFT of buttons)
+      // TIMESTAMP (RIGHT of text, LEFT of buttons)
       const timestampDiv = document.createElement("div");
       timestampDiv.className = "note-timestamp";
       const ts = note.lastUpdated || note.updatedAt || note.createdAt;
@@ -857,191 +857,12 @@ function renderList() {
       actions.appendChild(editBtn);
       actions.appendChild(deleteBtn);
       
-      // PERFECT ORDER: Text → Timestamp → Buttons
       item.appendChild(textDiv);
       item.appendChild(timestampDiv);
       item.appendChild(actions);
       notesListEl.appendChild(item);
     });
-}
-function renderList() {
-  const query = (searchInput.value || "").trim().toLowerCase();
-  const filtered = notes.filter((n) =>
-    n.text.toLowerCase().includes(query),
-  );
-  notesListEl.innerHTML = "";
-
-  filtered
-    .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
-    .forEach((note) => {
-      const item = document.createElement("article");
-      item.className = "note-list-item";
-      item.style.display = "flex";
-      item.style.alignItems = "flex-start";
-      item.style.gap = "12px";
-
-      // LEFT SIDE: Text + Timestamp
-      const main = document.createElement("div");
-      main.className = "note-list-main";
-      main.style.flex = "1";
-      
-      const showTimestamp = note.lastUpdated;  // Always shows latest
-      main.innerHTML = `
-        <p class="note-list-text">${escapeHtml(snippet(note.text, 120))}</p>
-        ${showTimestamp ? `<div class="note-timestamp">🕒 ${formatDateTime(note.lastUpdated)}</div>` : ''}
-      `;
-      main.onclick = () => openNote(note._id);
-
-      // RIGHT SIDE: Buttons only
-      const actions = document.createElement("div");
-      actions.className = "note-list-actions";
-      actions.style.display = "flex";
-      actions.style.flexDirection = "column";
-      actions.style.gap = "4px";
-      actions.style.minWidth = "60px";
-
-      const editBtn = document.createElement("button");
-      editBtn.className = "note-action-btn edit";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = (e) => {
-        e.stopPropagation();
-        startEditNote(note._id);
-      };
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "note-action-btn delete";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        deleteNote(note._id);
-      };
-
-      actions.appendChild(editBtn);
-      actions.appendChild(deleteBtn);
-      
-      item.appendChild(main);
-      item.appendChild(actions);
-      notesListEl.appendChild(item);
-    });
-}
-function renderList() {
-  const query = (searchInput.value || "").trim().toLowerCase();
-  const filtered = notes.filter((n) =>
-    n.text.toLowerCase().includes(query),
-  );
-  notesListEl.innerHTML = "";
-
-  filtered
-    .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
-    .forEach((note) => {
-      const item = document.createElement("article");
-      item.className = "note-list-item";
-
-      const main = document.createElement("div");
-      main.className = "note-list-main";
-      main.innerHTML = `<p class="note-list-text">${escapeHtml(snippet(note.text, 140))}</p>`;
-      main.onclick = () => openNote(note._id);
-
-      const actions = document.createElement("div");
-      actions.className = "note-list-actions";
-
-      // Timestamp + Edit button (side by side)
-      const timestampBtn = document.createElement("button");
-      timestampBtn.className = "note-action-btn timestamp";
-      timestampBtn.innerHTML = `🕒 ${formatDateTime(note.lastUpdated)}`;
-      timestampBtn.onclick = (e) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(formatDateTime(note.lastUpdated));
-        timestampBtn.textContent = "📋 Copied!";
-        setTimeout(() => timestampBtn.innerHTML = `🕒 ${formatDateTime(note.lastUpdated)}`, 2000);
-      };
-
-      const editBtn = document.createElement("button");
-      editBtn.className = "note-action-btn edit";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = (e) => {
-        e.stopPropagation();
-        startEditNote(note._id);
-      };
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "note-action-btn delete";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        deleteNote(note._id);
-      };
-
-      actions.appendChild(timestampBtn);
-      actions.appendChild(editBtn);
-      actions.appendChild(deleteBtn);
-      
-      item.appendChild(main);
-      item.appendChild(actions);
-      notesListEl.appendChild(item);
-    });
-}
-      function renderList() {
-        const query = (searchInput.value || "").trim().toLowerCase();
-        const filtered = notes.filter((n) =>
-          n.text.toLowerCase().includes(query),
-        );
-        notesListEl.innerHTML = "";
-
-        filtered
-          .sort(
-            (a, b) =>
-              new Date(b.updatedAt || b.createdAt) -
-              new Date(a.updatedAt || a.createdAt),
-          )
-          .forEach((note) => {
-            const item = document.createElement("article");
-            item.className = "note-list-item";
-
-            const main = document.createElement("div");
-            main.className = "note-list-main";
-
-            const wasEdited =
-              note.updatedAt &&
-              new Date(note.updatedAt) > new Date(note.createdAt);
-
-            main.innerHTML = `
-        <p class="note-list-text">${escapeHtml(snippet(note.text, 140))}</p>
-        <p class="note-meta">
-          <span>📝 ${formatDateTime(note.createdAt)}</span>
-          ${wasEdited ? `<br><span>✏️ ${formatDateTime(note.updatedAt)}</span>` : ""}
-        </p>
-      `;
-            main.onclick = () => openNote(note._id);
-
-            const actions = document.createElement("div");
-            actions.className = "note-list-actions";
-
-            const editBtn = document.createElement("button");
-            editBtn.className = "note-action-btn edit";
-            editBtn.textContent = "Edit";
-            editBtn.onclick = (e) => {
-              e.stopPropagation();
-              startEditNote(note._id);
-            };
-
-            const deleteBtn = document.createElement("button");
-            deleteBtn.className = "note-action-btn delete";
-            deleteBtn.textContent = "Delete";
-            deleteBtn.onclick = (e) => {
-              e.stopPropagation();
-              deleteNote(note._id);
-            };
-
-            actions.appendChild(editBtn);
-            actions.appendChild(deleteBtn);
-            item.appendChild(main);
-            item.appendChild(actions);
-            notesListEl.appendChild(item);
-          });
-      }
-      // --- CORE ACTIONS ---
-      async function saveNote() {
+}      async function saveNote() {
         const text = composerInput.value.trim();
         if (!text) return;
 
