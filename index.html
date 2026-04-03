@@ -1,1175 +1,272 @@
 <!doctype html>
-<html lang="en">
+<html>
   <head>
     <meta charset="UTF-8" />
-    <title>Gratitude Jar</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-
-    <link
-      href="https://fonts.googleapis.com/css2?family=Handlee&display=swap"
-      rel="stylesheet"
+    <title>Salrayworks | 8K Core Control</title>
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
     />
-
-    <style>
-      * {
-        box-sizing: border-box;
-      }
-
-      body {
-        margin: 0;
-        font-family:
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Inter",
-          sans-serif;
-        background: radial-gradient(
-          circle at top,
-          #1c2541 0%,
-          #0b1020 50%,
-          #05060b 100%
-        );
-        color: #f5f2eb;
-        position: relative;
-        overflow-x: hidden;
-      }
-
-      .app {
-        max-width: 960px;
-        margin: 0 auto;
-        padding: 24px 16px 32px;
-        min-height: 100vh;
-        display: flex;
-        flex-direction: column;
-      }
-
-      #auth-screen {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-      }
-
-      .auth-form input {
-        background: #fefcf6;
-        font-family: inherit;
-      }
-
-      .secondary-btn {
-        background: transparent;
-        color: #f5f2eb;
-        border: 1px solid rgba(245, 242, 235, 0.3);
-        padding: 10px 18px;
-        border-radius: 999px;
-        cursor: pointer;
-      }
-
-      .app-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 16px;
-      }
-
-      .app-header h1 {
-        font-size: 22px;
-        letter-spacing: 0.06em;
-        text-transform: uppercase;
-        margin: 0;
-      }
-
-      .app-nav {
-        display: flex;
-        gap: 8px;
-      }
-
-      .nav-btn {
-        border-radius: 999px;
-        border: 1px solid rgba(245, 242, 235, 0.2);
-        padding: 8px 14px;
-        font-size: 13px;
-        background: transparent;
-        color: #f5f2eb;
-        cursor: pointer;
-        transition:
-          background 150ms ease,
-          border-color 150ms ease,
-          color 150ms ease;
-      }
-
-      .nav-btn.is-active {
-        background: #f5f2eb;
-        color: #11121a;
-        border-color: #f5f2eb;
-      }
-
-      main {
-        flex: 1;
-      }
-
-      .view {
-        display: none;
-      }
-      .view.is-active {
-        display: block;
-      }
-
-      /* Jar view */
-      .jar-layout {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 24px;
-        padding-top: 40px;
-      }
-
-      .jar-container {
-        position: relative;
-      }
-
-      .jar-glass {
-        width: 220px;
-        height: 260px;
-        border-radius: 90px 90px 40px 40px;
-        border: 2px solid rgba(245, 242, 235, 0.4);
-        box-shadow:
-          0 0 40px rgba(0, 0, 0, 0.5) inset,
-          0 14px 30px rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(6px);
-        background: linear-gradient(
-          180deg,
-          rgba(245, 242, 235, 0.08),
-          rgba(10, 10, 20, 0.8)
-        );
-        overflow: hidden;
-        position: relative;
-      }
-
-      .jar-notes-layer {
-        position: absolute;
-        inset: 12px 16px 16px 16px;
-      }
-
-      .jar-note-paper {
-        position: absolute;
-        width: 80px;
-        height: 40px;
-        background: #f5f2eb;
-        border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
-        transform-origin: center;
-      }
-
-      @keyframes note-drop {
-        0% {
-          opacity: 0;
-          transform: translateY(-60px) rotate(-6deg) scale(0.8);
-        }
-        60% {
-          opacity: 1;
-          transform: translateY(0) rotate(4deg) scale(1.02);
-        }
-        100% {
-          transform: translateY(0) rotate(0deg) scale(1);
-        }
-      }
-
-      .jar-note-paper.is-dropping {
-        animation: note-drop 420ms cubic-bezier(0.19, 1, 0.22, 1);
-      }
-
-      .jar-streak {
-        margin-top: 12px;
-        font-size: 12px;
-        text-align: center;
-        opacity: 0.8;
-      }
-
-      .jar-actions {
-        display: flex;
-        gap: 12px;
-        justify-content: center;
-      }
-
-      .primary-btn,
-      .secondary-btn {
-        border-radius: 999px;
-        border: none;
-        padding: 10px 18px;
-        font-size: 14px;
-        cursor: pointer;
-        transition:
-          transform 120ms ease,
-          box-shadow 120ms ease,
-          background 150ms ease,
-          color 150ms ease,
-          border-color 150ms ease;
-      }
-
-      .primary-btn {
-        background: #f5f2eb;
-        color: #11121a;
-        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.45);
-      }
-
-      .secondary-btn {
-        background: transparent;
-        color: #f5f2eb;
-        border: 1px solid rgba(245, 242, 235, 0.3);
-      }
-
-      .primary-btn:hover,
-      .secondary-btn:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.5);
-      }
-
-      .primary-btn:active,
-      .secondary-btn:active {
-        transform: translateY(0);
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-      }
-
-      /* List view */
-      .list-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 12px;
-        margin-top: 32px;
-        margin-bottom: 16px;
-      }
-
-      .list-header h2 {
-        margin: 0;
-        font-size: 18px;
-      }
-
-      #search-input {
-        flex: 1;
-        max-width: 240px;
-        border-radius: 999px;
-        border: 1px solid rgba(245, 242, 235, 0.25);
-        padding: 6px 10px;
-        background: rgba(6, 7, 14, 0.6);
-        color: #f5f2eb;
-        font-size: 13px;
-      }
-
-      #search-input:focus {
-        outline: none;
-        border-color: rgba(245, 242, 235, 0.5);
-      }
-
-      .notes-list {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-        padding-bottom: 32px;
-      }
-
-      .note-list-item {
-        background: radial-gradient(
-          circle at top left,
-          rgba(255, 255, 255, 0.08),
-          rgba(10, 10, 14, 0.9)
-        );
-        border-radius: 10px;
-        padding: 10px 12px;
-        cursor: pointer;
-        border: 1px solid rgba(245, 242, 235, 0.12);
-        transition:
-          transform 120ms ease,
-          box-shadow 120ms ease,
-          border-color 120ms ease,
-          background 150ms ease;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-        gap: 8px;
-      }
-
-      .note-list-main {
-        flex: 1;
-        min-width: 0;
-      }
-
-      .note-list-item:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 10px 22px rgba(0, 0, 0, 0.65);
-        border-color: rgba(245, 242, 235, 0.3);
-      }
-
-      .note-list-text {
-        margin: 0;
-        font-size: 14px;
-        line-height: 1.4;
-        word-break: break-word;
-      }
-
-      .note-list-actions {
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-      }
-
-      .note-action-btn {
-        border: 0;
-        border-radius: 999px;
-        padding: 4px 8px;
-        font-size: 11px;
-        cursor: pointer;
-        background: rgba(245, 242, 235, 0.12);
-        color: #f5f2eb;
-      }
-
-      .note-action-btn.delete {
-        background: rgba(215, 90, 90, 0.28);
-      }
-
-      .note-action-btn:hover {
-        background: rgba(245, 242, 235, 0.22);
-      }
-      .note-action-btn.delete:hover {
-        background: rgba(215, 90, 90, 0.5);
-      }
-
-      /* Overlays */
-      .note-overlay,
-      .composer-overlay {
-        position: fixed;
-        inset: 0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        background: rgba(3, 4, 10, 0.78);
-        backdrop-filter: blur(4px);
-        z-index: 20;
-        padding: 16px;
-      }
-
-      .note-overlay.is-open,
-      .composer-overlay.is-open {
-        display: flex;
-      }
-
-      .note-card,
-      .composer-card {
-        background: #f5f2eb;
-        color: #23231f;
-        border-radius: 16px;
-        padding: 20px 20px 18px;
-        width: min(420px, 90vw);
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
-        position: relative;
-      }
-
-      .icon-btn {
-        position: absolute;
-        top: 10px;
-        right: 10px;
-        border: none;
-        background: transparent;
-        cursor: pointer;
-        font-size: 18px;
-        line-height: 1;
-        padding: 4px;
-        color: #8a8070;
-      }
-
-      .icon-btn:hover {
-        color: #4a4134;
-      }
-
-      .note-date {
-        font-size: 12px;
-        color: #938874;
-        margin-bottom: 10px;
-        display: none; /* stays hidden */
-      }
-
-      .note-text {
-        font-size: 15px;
-        line-height: 1.5;
-        white-space: pre-wrap;
-      }
-
-      .composer-card h2 {
-        margin: 0 0 12px 0;
-        font-size: 18px;
-        color: #3b352a;
-      }
-
-      .note-paper {
-        position: relative;
-        background: linear-gradient(#fefcf6, #f7efe0);
-        border-radius: 10px;
-        border: 1px solid #e3d8c3;
-        padding: 12px 12px 14px;
-        min-height: 130px;
-        margin-bottom: 14px;
-        box-shadow:
-          0 3px 8px rgba(0, 0, 0, 0.25),
-          0 0 0 1px rgba(255, 255, 255, 0.4) inset;
-        overflow: hidden;
-      }
-
-      .note-paper::before {
-        content: "";
-        position: absolute;
-        inset: 0;
-        background-image: linear-gradient(
-          rgba(0, 0, 0, 0.03) 1px,
-          transparent 1px
-        );
-        background-size: 100% 18px;
-        pointer-events: none;
-        opacity: 0.7;
-      }
-
-      .note-paper::after {
-        content: "";
-        position: absolute;
-        top: 0;
-        bottom: 0;
-        left: 28px;
-        width: 1px;
-        background: rgba(189, 99, 99, 0.45);
-        pointer-events: none;
-      }
-
-      #composer-input {
-        width: 100%;
-        border: none;
-        background: transparent;
-        resize: none;
-        margin: 0;
-        padding: 0;
-        font-family:
-          "Handlee",
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Inter",
-          sans-serif;
-        font-size: 18px;
-        line-height: 1.4;
-        color: #3b352a;
-        caret-color: #3b352a;
-        position: relative;
-        z-index: 1;
-      }
-
-      #composer-input:focus {
-        outline: none;
-      }
-
-      .composer-actions {
-        display: flex;
-        justify-content: flex-end;
-        gap: 10px;
-      }
-
-      @media (max-width: 600px) {
-        .app-header {
-          flex-direction: column;
-          align-items: flex-start;
-        }
-        .app-nav {
-          align-self: stretch;
-          justify-content: flex-start;
-        }
-        .jar-layout {
-          padding-top: 28px;
-        }
-      }
-
-      .note-meta {
-        margin: 8px 0 0;
-        font-size: 11px;
-        line-height: 1.4;
-        opacity: 0.75;
-      }
-
-.note-meta span {
-  display: block;
-}
-
-.note-list-item {
-  display: flex !important;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 12px;
-}
-
-.note-timestamp {
-  font-size: 11px;
-  color: #bbb;
-  padding: 4px 8px;
-  background: rgba(245, 242, 235, 0.08);
-  border-radius: 6px;
-  white-space: nowrap;
-  align-self: flex-start;
-}
-.note-list-actions {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 4px !important;
-}
-    </style>
+    <link rel="stylesheet" href="style.css" />
   </head>
   <body>
-    <div
-      id="auth-screen"
-      style="
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        height: 100vh;
-      "
-    >
-      <div
-        class="composer-card"
-        style="
-          background: #f5f2eb;
-          padding: 30px;
-          border-radius: 16px;
-          width: 350px;
-          box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
-        "
-      >
-        <h2 style="text-align: center; color: #3b352a; margin-bottom: 20px">
-          Welcome to your Jar
-        </h2>
-
-        <div style="display: flex; flex-direction: column; gap: 15px">
-          <input
-            id="auth-user"
-            type="text"
-            placeholder="Username"
-            style="
-              padding: 12px;
-              border-radius: 8px;
-              border: 1px solid #e3d8c3;
-              background: white;
-              color: #333;
-            "
-          />
-
-          <input
-            id="auth-pass"
-            type="password"
-            placeholder="Password"
-            style="
-              padding: 12px;
-              border-radius: 8px;
-              border: 1px solid #e3d8c3;
-              background: white;
-              color: #333;
-            "
-          />
-
-          <div style="display: flex; gap: 10px; margin-top: 10px">
-            <button
-              onclick="handleAuth('login')"
-              style="
-                flex: 1;
-                padding: 12px;
-                border-radius: 999px;
-                border: none;
-                background: #1c2541;
-                color: white;
-                cursor: pointer;
-                font-weight: bold;
-              "
-            >
-              Login
-            </button>
-
-            <button
-              onclick="handleAuth('register')"
-              style="
-                flex: 1;
-                padding: 12px;
-                border-radius: 999px;
-                border: 1px solid #1c2541;
-                background: transparent;
-                color: #1c2541;
-                cursor: pointer;
-                font-weight: bold;
-              "
-            >
-              Register
-            </button>
-          </div>
-        </div>
+    <div class="salray-title-bar">
+      <div class="drag-region">
+        <span class="app-id">SALRAYWORKS // 8K CORE v1.0</span>
+      </div>
+      <div class="window-controls">
+        <button id="minBtn">—</button>
+        <button id="maxBtn">▢</button>
+        <button id="closeBtn">×</button>
       </div>
     </div>
-    <div id="main-app" class="app" style="display: none">
-      <header class="app-header">
-        <h1>Gratitude Jar</h1>
-        <nav class="app-nav">
-          <button data-view="jar" class="nav-btn is-active">Jar</button>
-          <button data-view="list" class="nav-btn">List</button>
-          <div style="text-align: right">
-            <button id="logoutBtn" class="nav-btn">Logout</button>
-          </div>
-        </nav>
-      </header>
 
-      <main>
-        <section id="view-jar" class="view is-active">
-          <div class="jar-layout">
-            <div class="jar-container">
-              <div class="jar-glass">
-                <div class="jar-notes-layer" id="jar-notes-layer"></div>
+    <div class="app-container" id="mainApp">
+      <aside class="sidebar-left">
+        <div class="media-pool-container" style="display: flex; flex-direction: column; height: 100%">
+          <div class="panel-header">
+            <h2>Media Pool</h2>
+            <button class="btn-mini-add" title="Add Source">+</button>
+          </div>
+
+          <div class="media-list" id="mediaPoolList" style="flex: 1; padding: 10px; overflow-y: auto">
+            <div class="media-item active">
+              <div class="media-thumb">NDI</div>
+              <div class="media-meta">
+                <label>8K_MAIN_FEED</label>
+                <span>7680x4320 // 60 FPS</span>
               </div>
-              <div class="jar-streak" id="jar-streak"></div>
+              <div class="media-status-dot"></div>
             </div>
 
-            <div class="jar-actions">
-              <button id="btn-add-note" class="primary-btn">Add a note</button>
-              <button id="btn-draw-note" class="secondary-btn">Draw one</button>
-            </div>
-          </div>
-        </section>
-
-        <section id="view-list" class="view">
-          <div class="list-header">
-            <h2>All notes</h2>
-            <input id="search-input" type="search" placeholder="Search…" />
-          </div>
-          <div id="notes-list" class="notes-list"></div>
-        </section>
-
-        <div id="note-overlay" class="note-overlay">
-          <div class="note-card">
-            <button id="btn-close-overlay" class="icon-btn" aria-label="Close">
-              ✕
-            </button>
-            <div class="note-date" id="note-date"></div>
-            <div class="note-text" id="note-text"></div>
-          </div>
-        </div>
-
-        <div id="composer-overlay" class="composer-overlay">
-          <div class="composer-card">
-            <button
-              id="btn-cancel-composer"
-              class="icon-btn"
-              aria-label="Close"
-            >
-              ✕
-            </button>
-            <h2>What are you grateful for?</h2>
-            <div class="note-paper">
-              <textarea
-                id="composer-input"
-                rows="4"
-                placeholder="Write a small moment, a person, or something that made today a bit better."
-              ></textarea>
-            </div>
-            <div class="composer-actions">
-              <button class="secondary-btn" id="btn-cancel-composer-bottom">
-                Cancel
-              </button>
-              <button class="primary-btn" id="btn-save-composer">Save</button>
+            <div class="media-item">
+              <div class="media-thumb">FILE</div>
+              <div class="media-meta">
+                <label>TEST_PATTERN_V01</label>
+                <span>7680x4320 // PRORES</span>
+              </div>
+              <div class="media-status-dot offline"></div>
             </div>
           </div>
         </div>
+      </aside>
+
+      <main class="canvas-area">
+        <div id="galleryView">
+          <div class="panel-header">
+            <h2>Surface Templates // 8K Presets</h2>
+            <span class="status-tag">9 PRESETS</span>
+          </div>
+          <div class="template-grid">
+            <div class="template-card">
+              <div class="preview-box"><div class="standard-wall"></div></div>
+              <div class="card-info">
+                <span class="type">Standard 8K</span>
+                <span class="res">7680 x 4320</span>
+              </div>
+            </div>
+            <div class="template-card">
+              <div class="preview-box"><div class="wide-strip"></div></div>
+              <div class="card-info">
+                <span class="type">Cinema Strip</span>
+                <span class="res">15360 x 2160</span>
+              </div>
+            </div>
+            <div class="template-card">
+              <div class="preview-box">
+                <div class="cube-3d">
+                  <div class="cube-face top"></div>
+                  <div class="cube-face front"></div>
+                  <div class="cube-face side"></div>
+                </div>
+              </div>
+              <div class="card-info">
+                <span class="type">3D Cube</span>
+                <span class="res">3840 x 3840</span>
+              </div>
+            </div>
+            <div class="template-card">
+              <div class="preview-box">
+                <div class="curved-wall-icon"></div>
+              </div>
+              <div class="card-info">
+                <span class="type">Curved Wrap</span>
+                <span class="res">11520 x 2160</span>
+              </div>
+            </div>
+            <div class="template-card">
+              <div class="preview-box">
+                <div class="cube-3d">
+                  <div class="cube-face top"></div>
+                  <div class="cube-face front"></div>
+                  <div class="cube-face side"></div>
+                </div>
+              </div>
+              <div class="card-info">
+                <span class="type">Immersive Cube</span>
+                <span class="res">7680 x 7680</span>
+              </div>
+            </div>
+            <div class="template-card">
+              <div class="preview-box">
+                <div class="dual-stretch-icon"></div>
+              </div>
+              <div class="card-info">
+                <span class="type">Dual Stretch</span>
+                <span class="res">15360 x 4320</span>
+              </div>
+            </div>
+            <div class="template-card">
+              <div class="preview-box"><div class="pillars-icon"></div></div>
+              <div class="card-info">
+                <span class="type">Pillar Strips</span>
+                <span class="res">2160 x 7680</span>
+              </div>
+            </div>
+            <div class="template-card">
+              <div class="preview-box"><div class="square-icon"></div></div>
+              <div class="card-info">
+                <span class="type">Square Master</span>
+                <span class="res">8192 x 8192</span>
+              </div>
+            </div>
+            <div class="template-card">
+              <div class="preview-box"><div class="triangle-3d"></div></div>
+              <div class="card-info">
+                <span class="type">Triangle Prism</span>
+                <span class="res">5760 x 1920</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="workspaceView" style="display: none; height: 100%; flex-direction: column">
+          <div class="canvas-viewport" style="flex: 2; position: relative; display: flex; flex-direction: column; overflow: hidden;">
+            <div class="panel-header" style="background: rgba(0, 0, 0, 0.3); border-bottom: 1px solid var(--vada-border); display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; padding: 10px 20px;">
+              <div style="display: flex; align-items: center; gap: 15px">
+                <button id="backBtn" class="btn-chevron-back">‹</button>
+                <div style="display: flex; flex-direction: column; justify-content: center; border-left: 1px solid #333; padding-left: 15px; height: 24px;">
+                  <span id="liveRes" style="font-size: 11px; color: var(--vada-accent); opacity: 0.9; font-family: monospace; letter-spacing: 1px;">7680 x 4320</span>
+                </div>
+              </div>
+              <div style="text-align: center">
+                <h2 id="activeTaskName" style="color: #eee; letter-spacing: 3px; font-weight: 500; margin: 0; text-transform: uppercase;">ACTIVE: STANDARD 8K</h2>
+              </div>
+              <div style="display: flex; justify-content: flex-end; align-items: center;">
+                <span class="status-tag active-pulse">LIVE</span>
+              </div>
+            </div>
+
+            <div class="canvas-stage" style="flex: 1; position: relative">
+              <div class="grid-dots"></div>
+              <div id="activeSurface" class="video-layer">
+                <div class="layer-info">8K_CORE_PROXIMITY</div>
+                <div class="transform-nodes">
+                  <div class="rotate-node"></div>
+                  <div class="node nw"></div><div class="node n"></div><div class="node ne"></div>
+                  <div class="node w"></div><div class="node e"></div>
+                  <div class="node sw"></div><div class="node s"></div><div class="node se"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="canvasResizer" class="sidebar-resizer horizontal"></div>
+
+          <div class="control-deck" id="bottomControlDeck" style="height: 250px; background: var(--vada-panel)">
+            <div class="panel-header">
+              <h2>Canvas Control Deck</h2>
+              <div class="deck-tabs">
+                <button class="tab-mini active">Mapping</button>
+                <button class="tab-mini">Color</button>
+                <button class="tab-mini">NDI Config</button>
+              </div>
+            </div>
+            <div class="deck-content">
+              <div class="bento-input mini"><label>X Offset</label><input type="number" value="0" id="posX" /></div>
+              <div class="bento-input mini"><label>Y Offset</label><input type="number" value="0" id="posY" /></div>
+              <div class="bento-input mini"><label>Scale Factor</label><input type="number" value="1.0" step="0.1" /></div>
+            </div>
+          </div>
+        </div>
+        <div class="scan-bar"></div>
       </main>
+
+      <aside class="sidebar-right">
+        <div id="architectPanel">
+          <div class="panel-header">
+            <h2>Canvas Architect</h2>
+            <span class="status-tag" id="canvasStatus">DRAFT</span>
+          </div>
+          <div class="bento-input"><label>Width</label><input type="number" id="canvasW" value="7680" /></div>
+          <div class="bento-input"><label>Height</label><input type="number" id="canvasH" value="4320" /></div>
+          <div style="padding: 10px 20px">
+            <button class="btn-primary-action" onclick="createCanvas()">CREATE NEW CANVAS</button>
+          </div>
+        </div>
+
+        <div id="inspectorPanel" style="display: none" class="fade-in-vada">
+          <div class="panel-header">
+            <h2 id="inspectorTitle">Inspector</h2>
+            <button id="exitInspBtn" class="btn-vada" style="margin: 0; padding: 4px 8px; font-size: 8px; width: auto">EXIT</button>
+          </div>
+          <div class="bento-input">
+            <label>Mapping Mode</label>
+            <div class="salray-dropdown" id="mappingDropdown">
+              <div class="dropdown-selected">Pixel-to-Pixel</div>
+              <div class="dropdown-options">
+                <div class="option active" data-value="p2p">Pixel-to-Pixel</div>
+                <div class="option" data-value="stretch">Stretch to Fill</div>
+                <div class="option" data-value="fit">Fit to Viewport</div>
+                <div class="option" data-value="crop">Center Crop</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div id="lockSection" style="display: none">
+          <div class="lock-container">
+            <span>LOCK CONFIG</span><input type="checkbox" id="lockToggle" />
+          </div>
+        </div>
+
+        <div style="margin-top: auto;"></div>
+
+        <div style="padding-bottom: 10px">
+<div id="resetSection" style="display: none; padding: 0 20px 10px 20px;">
+        <button class="btn-danger-mini" onclick="window.hardResetWorkspace()">
+            RESET CONFIGURATION
+        </button>
     </div>
 
-    <script>
-      // --- CONFIGURATION & STATE ---
-      const API_URL = "https://gratitude-jar.onrender.com";
-      let TOKEN = localStorage.getItem("jar_token");
-      let notes = [];
-      let currentView = "jar";
-      let currentNoteId = null;
+    <div style="padding: 0 20px 20px 20px;">
+        <button class="btn-vada" style="width: 100%;" onclick="toggleScanner()">
+            RUN SPATIAL SCAN
+        </button>
+        </div>
+      </aside>
+    </div>
 
-      // --- SELECTORS ---
-      const authScreen = document.getElementById("auth-screen");
-      const appContainer = document.getElementById("main-app");
-      const viewJar = document.getElementById("view-jar");
-      const viewList = document.getElementById("view-list");
-      const jarNotesLayer = document.getElementById("jar-notes-layer");
-      const jarStreakEl = document.getElementById("jar-streak");
-      const notesListEl = document.getElementById("notes-list");
-      const searchInput = document.getElementById("search-input");
-      const composerOverlay = document.getElementById("composer-overlay");
-      const composerInput = document.getElementById("composer-input");
-      const noteOverlay = document.getElementById("note-overlay");
-      const noteTextEl = document.getElementById("note-text");
+    <div id="sourceTray" class="source-tray">
+      <div class="tray-header"><span>IMPORT ENGINE</span><button id="closeTrayBtn">×</button></div>
+      <div class="tray-options">
+        <div class="tray-opt" data-type="NDI">NDI® STREAM</div>
+        <div class="tray-opt" data-type="FILE">LOCAL VIDEO</div>
+        <div class="tray-opt" data-type="LIVE">LIVE CAPTURE</div>
+      </div>
+    </div>
 
-      // --- AUTHENTICATION ---
-      async function handleAuth(type) {
-        const username = document.getElementById("auth-user").value.trim();
-        const password = document.getElementById("auth-pass").value.trim();
-        if (!username || !password) return alert("Please fill in both fields");
+    <div id="contextMenu" class="salray-ctx">
+      <div class="ctx-item" id="ctxFront">Bring to Front</div>
+      <div class="ctx-item" id="ctxBack">Send to Back</div>
+      <div class="ctx-divider"></div>
+      <div class="ctx-item" id="ctxLock">Lock Layer</div>
+      <div class="ctx-item" id="ctxUnlock" style="display: none">Unlock Layer</div>
+      <div class="ctx-divider"></div>
+      <div class="ctx-item" id="ctxReset">Reset Transform</div>
+      <div class="ctx-item" id="ctxDelete" style="color: #ff4444">Delete Source</div>
+    </div>
 
-        try {
-          const res = await fetch(`${API_URL}/${type}`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password }),
-          });
-
-          if (res.ok) {
-            if (type === "login") {
-              const data = await res.json();
-              TOKEN = data.token;
-              localStorage.setItem("jar_token", TOKEN);
-              showApp();
-            } else {
-              alert("Registration successful! Now you can Login.");
-            }
-          } else {
-            alert("Error: " + (await res.text()));
-          }
-        } catch (err) {
-          alert("Cannot connect to server.");
-        }
-      }
-
-      function showApp() {
-        authScreen.style.display = "none";
-        appContainer.style.display = "flex";
-        syncNotes();
-      }
-
-      function logout() {
-        localStorage.removeItem("jar_token");
-        window.location.reload();
-      }
-
-      // --- API DATA ---
-      async function syncNotes() {
-        if (!TOKEN) return;
-        try {
-          const res = await fetch(`${API_URL}/notes`, {
-            headers: { Authorization: TOKEN },
-          });
-          if (res.status === 401) return logout();
-          notes = await res.json();
-          renderJar();
-          if (currentView === "list") renderList();
-        } catch (e) {
-          console.error("Sync Error:", e);
-        }
-      }
-
-      // --- UI RENDERING ---
-      function setView(view) {
-        currentView = view;
-        viewJar.classList.toggle("is-active", view === "jar");
-        viewList.classList.toggle("is-active", view === "list");
-        document
-          .querySelectorAll(".nav-btn[data-view]")
-          .forEach((btn) =>
-            btn.classList.toggle("is-active", btn.dataset.view === view),
-          );
-        view === "jar" ? renderJar() : renderList();
-      }
-
-      function renderJar() {
-        if (!jarNotesLayer) return;
-        jarNotesLayer.innerHTML = "";
-        const density = Math.min(notes.length, 12);
-        for (let i = 0; i < density; i++) {
-          const div = document.createElement("div");
-          div.className = "jar-note-paper";
-          const row = Math.floor(i / 4);
-          const col = i % 4;
-          div.style.bottom = row * 18 + "px";
-          div.style.left = 8 + col * 32 + "px";
-          div.style.transform = `rotate(${(Math.random() - 0.5) * 10}deg)`;
-          jarNotesLayer.appendChild(div);
-        }
-        jarStreakEl.textContent = getStreak() + "-day streak of gratitude";
-      }
-
-function formatDateTime(dateString) {
-  return new Date(dateString).toLocaleString();
-}
-
-function renderList() {
-  const query = (searchInput.value || "").trim().toLowerCase();
-  const filtered = notes.filter((n) =>
-    n.text.toLowerCase().includes(query),
-  );
-  notesListEl.innerHTML = "";
-
-  filtered
-    .sort((a, b) => new Date(b.lastUpdated || b.updatedAt || b.createdAt) - new Date(a.lastUpdated || a.updatedAt || a.createdAt))
-    .forEach((note) => {
-      const item = document.createElement("article");
-      item.className = "note-list-item";
-      item.style.display = "flex";
-      item.style.alignItems = "flex-start";
-      item.style.gap = "8px";
-
-      // TEXT (leftmost)
-      const textDiv = document.createElement("div");
-      textDiv.style.flex = "1";
-      textDiv.innerHTML = `<p class="note-list-text">${escapeHtml(snippet(note.text, 100))}</p>`;
-      textDiv.onclick = () => openNote(note._id);
-
-      // TIMESTAMP (middle - RIGHT of text, LEFT of buttons)
-      const timestampDiv = document.createElement("div");
-      timestampDiv.className = "note-timestamp";
-      const ts = note.lastUpdated || note.updatedAt || note.createdAt;
-      timestampDiv.innerHTML = `🕒 ${formatDateTime(ts)}`;
-      timestampDiv.style.flexShrink = "0";
-      timestampDiv.style.cursor = "pointer";
-      timestampDiv.onclick = (e) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(formatDateTime(ts));
-        timestampDiv.innerHTML = "📋 Copied!";
-        setTimeout(() => timestampDiv.innerHTML = `🕒 ${formatDateTime(ts)}`, 1500);
-      };
-
-      // BUTTONS (rightmost)
-      const actions = document.createElement("div");
-      actions.className = "note-list-actions";
-      actions.style.display = "flex";
-      actions.style.flexDirection = "column";
-      actions.style.gap = "4px";
-      actions.style.flexShrink = "0";
-
-      const editBtn = document.createElement("button");
-      editBtn.className = "note-action-btn edit";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = (e) => {
-        e.stopPropagation();
-        startEditNote(note._id);
-      };
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "note-action-btn delete";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        deleteNote(note._id);
-      };
-
-      actions.appendChild(editBtn);
-      actions.appendChild(deleteBtn);
-      
-      // PERFECT ORDER: Text → Timestamp → Buttons
-      item.appendChild(textDiv);
-      item.appendChild(timestampDiv);
-      item.appendChild(actions);
-      notesListEl.appendChild(item);
-    });
-}
-function renderList() {
-  const query = (searchInput.value || "").trim().toLowerCase();
-  const filtered = notes.filter((n) =>
-    n.text.toLowerCase().includes(query),
-  );
-  notesListEl.innerHTML = "";
-
-  filtered
-    .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
-    .forEach((note) => {
-      const item = document.createElement("article");
-      item.className = "note-list-item";
-      item.style.display = "flex";
-      item.style.alignItems = "flex-start";
-      item.style.gap = "12px";
-
-      // LEFT SIDE: Text + Timestamp
-      const main = document.createElement("div");
-      main.className = "note-list-main";
-      main.style.flex = "1";
-      
-      const showTimestamp = note.lastUpdated;  // Always shows latest
-      main.innerHTML = `
-        <p class="note-list-text">${escapeHtml(snippet(note.text, 120))}</p>
-        ${showTimestamp ? `<div class="note-timestamp">🕒 ${formatDateTime(note.lastUpdated)}</div>` : ''}
-      `;
-      main.onclick = () => openNote(note._id);
-
-      // RIGHT SIDE: Buttons only
-      const actions = document.createElement("div");
-      actions.className = "note-list-actions";
-      actions.style.display = "flex";
-      actions.style.flexDirection = "column";
-      actions.style.gap = "4px";
-      actions.style.minWidth = "60px";
-
-      const editBtn = document.createElement("button");
-      editBtn.className = "note-action-btn edit";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = (e) => {
-        e.stopPropagation();
-        startEditNote(note._id);
-      };
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "note-action-btn delete";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        deleteNote(note._id);
-      };
-
-      actions.appendChild(editBtn);
-      actions.appendChild(deleteBtn);
-      
-      item.appendChild(main);
-      item.appendChild(actions);
-      notesListEl.appendChild(item);
-    });
-}
-function renderList() {
-  const query = (searchInput.value || "").trim().toLowerCase();
-  const filtered = notes.filter((n) =>
-    n.text.toLowerCase().includes(query),
-  );
-  notesListEl.innerHTML = "";
-
-  filtered
-    .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
-    .forEach((note) => {
-      const item = document.createElement("article");
-      item.className = "note-list-item";
-
-      const main = document.createElement("div");
-      main.className = "note-list-main";
-      main.innerHTML = `<p class="note-list-text">${escapeHtml(snippet(note.text, 140))}</p>`;
-      main.onclick = () => openNote(note._id);
-
-      const actions = document.createElement("div");
-      actions.className = "note-list-actions";
-
-      // Timestamp + Edit button (side by side)
-      const timestampBtn = document.createElement("button");
-      timestampBtn.className = "note-action-btn timestamp";
-      timestampBtn.innerHTML = `🕒 ${formatDateTime(note.lastUpdated)}`;
-      timestampBtn.onclick = (e) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(formatDateTime(note.lastUpdated));
-        timestampBtn.textContent = "📋 Copied!";
-        setTimeout(() => timestampBtn.innerHTML = `🕒 ${formatDateTime(note.lastUpdated)}`, 2000);
-      };
-
-      const editBtn = document.createElement("button");
-      editBtn.className = "note-action-btn edit";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = (e) => {
-        e.stopPropagation();
-        startEditNote(note._id);
-      };
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "note-action-btn delete";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        deleteNote(note._id);
-      };
-
-      actions.appendChild(timestampBtn);
-      actions.appendChild(editBtn);
-      actions.appendChild(deleteBtn);
-      
-      item.appendChild(main);
-      item.appendChild(actions);
-      notesListEl.appendChild(item);
-    });
-}
-      function renderList() {
-        const query = (searchInput.value || "").trim().toLowerCase();
-        const filtered = notes.filter((n) =>
-          n.text.toLowerCase().includes(query),
-        );
-        notesListEl.innerHTML = "";
-
-        filtered
-          .sort(
-            (a, b) =>
-              new Date(b.updatedAt || b.createdAt) -
-              new Date(a.updatedAt || a.createdAt),
-          )
-          .forEach((note) => {
-            const item = document.createElement("article");
-            item.className = "note-list-item";
-
-            const main = document.createElement("div");
-            main.className = "note-list-main";
-
-            const wasEdited =
-              note.updatedAt &&
-              new Date(note.updatedAt) > new Date(note.createdAt);
-
-            main.innerHTML = `
-        <p class="note-list-text">${escapeHtml(snippet(note.text, 140))}</p>
-        <p class="note-meta">
-          <span>📝 ${formatDateTime(note.createdAt)}</span>
-          ${wasEdited ? `<br><span>✏️ ${formatDateTime(note.updatedAt)}</span>` : ""}
-        </p>
-      `;
-            main.onclick = () => openNote(note._id);
-
-            const actions = document.createElement("div");
-            actions.className = "note-list-actions";
-
-            const editBtn = document.createElement("button");
-            editBtn.className = "note-action-btn edit";
-            editBtn.textContent = "Edit";
-            editBtn.onclick = (e) => {
-              e.stopPropagation();
-              startEditNote(note._id);
-            };
-
-            const deleteBtn = document.createElement("button");
-            deleteBtn.className = "note-action-btn delete";
-            deleteBtn.textContent = "Delete";
-            deleteBtn.onclick = (e) => {
-              e.stopPropagation();
-              deleteNote(note._id);
-            };
-
-            actions.appendChild(editBtn);
-            actions.appendChild(deleteBtn);
-            item.appendChild(main);
-            item.appendChild(actions);
-            notesListEl.appendChild(item);
-          });
-      }
-      // --- CORE ACTIONS ---
-      async function saveNote() {
-        const text = composerInput.value.trim();
-        if (!text) return;
-
-        const method = currentNoteId ? "PUT" : "POST";
-        const url = currentNoteId
-          ? `${API_URL}/notes/${currentNoteId}`
-          : `${API_URL}/notes`;
-        const body = currentNoteId ? { newText: text } : { text };
-
-        try {
-          const res = await fetch(url, {
-            method,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: TOKEN,
-            },
-            body: JSON.stringify(body),
-          });
-
-          if (res.ok) {
-            composerOverlay.classList.remove("is-open");
-            currentNoteId = null;
-            composerInput.value = "";
-            await syncNotes();
-            if (method === "POST") addDropEffect();
-          } else {
-            alert("Save failed.");
-          }
-        } catch (e) {
-          alert("Server connection error.");
-        }
-      }
-
-      async function deleteNote(id) {
-        if (!confirm("Are you sure you want to delete this note?")) return;
-        try {
-          const res = await fetch(`${API_URL}/notes/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: TOKEN },
-          });
-          if (res.ok) {
-            await syncNotes();
-          } else {
-            alert(
-              "Delete failed on server. Make sure your server is running and updated.",
-            );
-          }
-        } catch (e) {
-          console.error("Delete Error:", e);
-        }
-      }
-
-      function startEditNote(id) {
-        const note = notes.find((n) => n._id === id);
-        if (!note) return;
-        currentNoteId = id;
-        composerInput.value = note.text;
-        composerOverlay.classList.add("is-open");
-        setTimeout(() => composerInput.focus(), 50);
-      }
-
-      function openNote(id) {
-        const note = notes.find((n) => n._id === id);
-        if (!note) return;
-        noteTextEl.textContent = note.text;
-        noteOverlay.classList.add("is-open");
-      }
-
-      // --- HELPERS ---
-      function getStreak() {
-        if (!notes.length) return 0;
-        const days = new Set(
-          notes.map((n) => new Date(n.createdAt).toDateString()),
-        );
-        let streak = 0,
-          cursor = new Date();
-        while (days.has(cursor.toDateString())) {
-          streak++;
-          cursor.setDate(cursor.getDate() - 1);
-        }
-        return streak;
-      }
-      function escapeHtml(str) {
-        const div = document.createElement("div");
-        div.textContent = str;
-        return div.innerHTML;
-      }
-      function snippet(str, max) {
-        return str.length > max ? str.slice(0, max) + "…" : str;
-      }
-      function addDropEffect() {
-        const paper = document.createElement("div");
-        paper.className = "jar-note-paper is-dropping";
-        paper.style.left = "50%";
-        paper.style.bottom = "140px";
-        paper.style.transform = "translateX(-50%)";
-        jarNotesLayer.appendChild(paper);
-        setTimeout(renderJar, 430);
-      }
-
-      // --- LISTENERS ---
-      document.querySelectorAll(".nav-btn[data-view]").forEach((btn) => {
-        btn.onclick = () => setView(btn.dataset.view);
-      });
-
-      document.getElementById("logoutBtn").onclick = logout;
-      document.getElementById("btn-add-note").onclick = () => {
-        currentNoteId = null;
-        composerInput.value = "";
-        composerOverlay.classList.add("is-open");
-      };
-      document.getElementById("btn-save-composer").onclick = saveNote;
-      document.getElementById("btn-draw-note").onclick = () => {
-        if (!notes.length) return;
-        const random = notes[Math.floor(Math.random() * notes.length)];
-        openNote(random._id);
-      };
-      document.getElementById("btn-close-overlay").onclick = () =>
-        noteOverlay.classList.remove("is-open");
-      document.getElementById("btn-cancel-composer").onclick = () =>
-        composerOverlay.classList.remove("is-open");
-      document.getElementById("btn-cancel-composer-bottom").onclick = () =>
-        composerOverlay.classList.remove("is-open");
-      searchInput.oninput = renderList;
-
-      window.addEventListener("DOMContentLoaded", () => {
-        if (TOKEN) showApp();
-      });
-    </script>
+    <script src="render.js"></script>
   </body>
 </html>
