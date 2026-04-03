@@ -161,23 +161,24 @@
         transform-origin: center;
       }
 
-      @keyframes note-drop {
-        0% {
-          opacity: 0;
-          transform: translateY(-60px) rotate(-6deg) scale(0.8);
-        }
-        60% {
-          opacity: 1;
-          transform: translateY(0) rotate(4deg) scale(1.02);
-        }
-        100% {
-          transform: translateY(0) rotate(0deg) scale(1);
-        }
-      }
+@keyframes note-drop {
+  0% {
+    opacity: 0;
+    transform: translateY(-60px) rotate(-8deg) scale(0.7);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(10px) rotate(2deg) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) rotate(-2deg) scale(1);
+  }
+}
 
-      .jar-note-paper.is-dropping {
-        animation: note-drop 420ms cubic-bezier(0.19, 1, 0.22, 1);
-      }
+  .jar-note-paper.is-dropping {
+  animation: note-drop 450ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
 
       .jar-streak {
         margin-top: 12px;
@@ -953,16 +954,24 @@ function renderList() {
       function snippet(str, max) {
         return str.length > max ? str.slice(0, max) + "…" : str;
       }
-      function addDropEffect() {
-        const paper = document.createElement("div");
-        paper.className = "jar-note-paper is-dropping";
-        paper.style.left = "50%";
-        paper.style.bottom = "140px";
-        paper.style.transform = "translateX(-50%)";
-        jarNotesLayer.appendChild(paper);
-        setTimeout(renderJar, 430);
-      }
-
+function addDropEffect() {
+  const paper = document.createElement("div");
+  paper.className = "jar-note-paper is-dropping";
+  paper.style.left = "50%";
+  paper.style.bottom = "140px";
+  paper.style.transform = "translateX(-50%) rotate(0deg)";
+  paper.style.opacity = "0";  // Start invisible
+  jarNotesLayer.appendChild(paper);
+  
+  // Smooth animation + cleanup
+  requestAnimationFrame(() => {
+    paper.style.opacity = "1";
+  });
+  setTimeout(() => {
+    paper.remove();  // Clean up dropped note
+    renderJar();     // Refresh jar
+  }, 450);
+}
       // --- LISTENERS ---
       document.querySelectorAll(".nav-btn[data-view]").forEach((btn) => {
         btn.onclick = () => setView(btn.dataset.view);
