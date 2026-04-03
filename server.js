@@ -5,6 +5,11 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 
+
+app.get('/', (req, res) => res.send('Gratitude Jar API Live!'));
+app.get('/notes', authenticate, async (req, res) => {
+  // your existing code
+});
 dotenv.config();
 
 const app = express();
@@ -12,11 +17,15 @@ app.use(express.json());
 app.use(cors());
 
 const JWT_SECRET = process.env.JWT_SECRET || "SUPER_SECRET_REPLACE_THIS";
-const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/gratitude_jar';
+// ✅ FIXED: Use correct variable name
+const mongoURI = process.env.MONGODB_URI;  // Not MONGO_URI
 
-mongoose.connect(mongoURI)
-  .then(() => console.log("✅ Successfully connected to MongoDB"))
-  .catch(err => console.error("❌ MongoDB Connection Error:", err.message));
+mongoose.connect(process.env.MONGODB_URI || '')
+  .then(() => console.log("✅ Connected to MongoDB Atlas"))
+  .catch(err => {
+    console.error("❌ MongoDB Connection Error:", err.message);
+    process.exit(1); // Render restarts automatically
+  });
 
 const userSchema = new mongoose.Schema({
   username: { type: String, required: true, unique: true },
@@ -94,5 +103,15 @@ app.delete("/notes/:id", authenticate, async (req, res) => {
   } catch (e) { res.status(500).send("Delete failed"); }
 });
 
-const PORT = 5000;
-app.listen(PORT, () => console.log(`🚀 Server on http://localhost:${PORT}`));
+const PORT = process.env.PORT || 5000;
+const server = app.listen(PORT, () => {
+  console.log(`🚀 Server on port ${PORT}`);
+});
+
+// Graceful shutdown
+process.on('SIGTERM', () => {
+  console.log('SIGTERM received, shutting down gracefully');
+  server.close(() => {
+    process.exit(0);
+  });
+});
