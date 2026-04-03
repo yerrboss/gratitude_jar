@@ -495,6 +495,26 @@
 .note-meta span {
   display: block;
 }
+
+.note-list-item {
+  display: flex !important;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.note-timestamp {
+  font-size: 11px;
+  color: #888;
+  margin-top: 4px;
+  padding: 2px 6px;
+  background: rgba(245, 242, 235, 0.1);
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.note-list-actions {
+  flex-shrink: 0 !important;
+}
     </style>
   </head>
   <body>
@@ -769,9 +789,69 @@
       }
 
 function formatDateTime(dateString) {
-  return new Date(dateString).toLocaleString();  // Device's exact timezone!
+  return new Date(dateString).toLocaleString();  // Device timezone!
 }
 
+function renderList() {
+  const query = (searchInput.value || "").trim().toLowerCase();
+  const filtered = notes.filter((n) =>
+    n.text.toLowerCase().includes(query),
+  );
+  notesListEl.innerHTML = "";
+
+  filtered
+    .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
+    .forEach((note) => {
+      const item = document.createElement("article");
+      item.className = "note-list-item";
+      item.style.display = "flex";
+      item.style.alignItems = "flex-start";
+      item.style.gap = "12px";
+
+      // LEFT SIDE: Text + Timestamp
+      const main = document.createElement("div");
+      main.className = "note-list-main";
+      main.style.flex = "1";
+      
+      const showTimestamp = note.lastUpdated;  // Always shows latest
+      main.innerHTML = `
+        <p class="note-list-text">${escapeHtml(snippet(note.text, 120))}</p>
+        ${showTimestamp ? `<div class="note-timestamp">🕒 ${formatDateTime(note.lastUpdated)}</div>` : ''}
+      `;
+      main.onclick = () => openNote(note._id);
+
+      // RIGHT SIDE: Buttons only
+      const actions = document.createElement("div");
+      actions.className = "note-list-actions";
+      actions.style.display = "flex";
+      actions.style.flexDirection = "column";
+      actions.style.gap = "4px";
+      actions.style.minWidth = "60px";
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "note-action-btn edit";
+      editBtn.textContent = "Edit";
+      editBtn.onclick = (e) => {
+        e.stopPropagation();
+        startEditNote(note._id);
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "note-action-btn delete";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteNote(note._id);
+      };
+
+      actions.appendChild(editBtn);
+      actions.appendChild(deleteBtn);
+      
+      item.appendChild(main);
+      item.appendChild(actions);
+      notesListEl.appendChild(item);
+    });
+}
 function renderList() {
   const query = (searchInput.value || "").trim().toLowerCase();
   const filtered = notes.filter((n) =>
