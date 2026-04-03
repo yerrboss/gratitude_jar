@@ -485,19 +485,12 @@
         }
       }
 
-      .note-meta {
-        margin: 8px 0 0;
-        font-size: 11px;
-        line-height: 1.4;
-        opacity: 0.75;
-      }
-
-      .note-meta {
-  margin: 6px 0 0;
-  font-size: 11px;
-  line-height: 1.3;
-  opacity: 0.8;
-  color: #666;
+.note-action-btn.timestamp {
+  font-size: 10px;
+  padding: 2px 6px;
+  min-width: 120px;
+  text-align: left;
+  background: rgba(245, 242, 235, 0.08);
 }
 .note-meta span {
   display: block;
@@ -775,16 +768,67 @@
         jarStreakEl.textContent = getStreak() + "-day streak of gratitude";
       }
 
-      function formatDateTime(dateString) {
-        return new Date(dateString).toLocaleString("en-US", {
-          month: "short",
-          day: "numeric",
-          year: "numeric",
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-      }
+function formatDateTime(dateString) {
+  return new Date(dateString).toLocaleString();  // Device's exact timezone!
+}
 
+function renderList() {
+  const query = (searchInput.value || "").trim().toLowerCase();
+  const filtered = notes.filter((n) =>
+    n.text.toLowerCase().includes(query),
+  );
+  notesListEl.innerHTML = "";
+
+  filtered
+    .sort((a, b) => new Date(b.lastUpdated) - new Date(a.lastUpdated))
+    .forEach((note) => {
+      const item = document.createElement("article");
+      item.className = "note-list-item";
+
+      const main = document.createElement("div");
+      main.className = "note-list-main";
+      main.innerHTML = `<p class="note-list-text">${escapeHtml(snippet(note.text, 140))}</p>`;
+      main.onclick = () => openNote(note._id);
+
+      const actions = document.createElement("div");
+      actions.className = "note-list-actions";
+
+      // Timestamp + Edit button (side by side)
+      const timestampBtn = document.createElement("button");
+      timestampBtn.className = "note-action-btn timestamp";
+      timestampBtn.innerHTML = `🕒 ${formatDateTime(note.lastUpdated)}`;
+      timestampBtn.onclick = (e) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(formatDateTime(note.lastUpdated));
+        timestampBtn.textContent = "📋 Copied!";
+        setTimeout(() => timestampBtn.innerHTML = `🕒 ${formatDateTime(note.lastUpdated)}`, 2000);
+      };
+
+      const editBtn = document.createElement("button");
+      editBtn.className = "note-action-btn edit";
+      editBtn.textContent = "Edit";
+      editBtn.onclick = (e) => {
+        e.stopPropagation();
+        startEditNote(note._id);
+      };
+
+      const deleteBtn = document.createElement("button");
+      deleteBtn.className = "note-action-btn delete";
+      deleteBtn.textContent = "Delete";
+      deleteBtn.onclick = (e) => {
+        e.stopPropagation();
+        deleteNote(note._id);
+      };
+
+      actions.appendChild(timestampBtn);
+      actions.appendChild(editBtn);
+      actions.appendChild(deleteBtn);
+      
+      item.appendChild(main);
+      item.appendChild(actions);
+      notesListEl.appendChild(item);
+    });
+}
       function renderList() {
         const query = (searchInput.value || "").trim().toLowerCase();
         const filtered = notes.filter((n) =>
