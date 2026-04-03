@@ -484,6 +484,24 @@
           padding-top: 28px;
         }
       }
+
+      .note-meta {
+        margin: 8px 0 0;
+        font-size: 11px;
+        line-height: 1.4;
+        opacity: 0.75;
+      }
+
+      .note-meta {
+  margin: 6px 0 0;
+  font-size: 11px;
+  line-height: 1.3;
+  opacity: 0.8;
+  color: #666;
+}
+.note-meta span {
+  display: block;
+}
     </style>
   </head>
   <body>
@@ -757,6 +775,16 @@
         jarStreakEl.textContent = getStreak() + "-day streak of gratitude";
       }
 
+      function formatDateTime(dateString) {
+        return new Date(dateString).toLocaleString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
       function renderList() {
         const query = (searchInput.value || "").trim().toLowerCase();
         const filtered = notes.filter((n) =>
@@ -765,14 +793,29 @@
         notesListEl.innerHTML = "";
 
         filtered
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+          .sort(
+            (a, b) =>
+              new Date(b.updatedAt || b.createdAt) -
+              new Date(a.updatedAt || a.createdAt),
+          )
           .forEach((note) => {
             const item = document.createElement("article");
             item.className = "note-list-item";
 
             const main = document.createElement("div");
             main.className = "note-list-main";
-            main.innerHTML = `<p class="note-list-text">${escapeHtml(snippet(note.text, 160))}</p>`;
+
+            const wasEdited =
+              note.updatedAt &&
+              new Date(note.updatedAt) > new Date(note.createdAt);
+
+            main.innerHTML = `
+        <p class="note-list-text">${escapeHtml(snippet(note.text, 140))}</p>
+        <p class="note-meta">
+          <span>📝 ${formatDateTime(note.createdAt)}</span>
+          ${wasEdited ? `<br><span>✏️ ${formatDateTime(note.updatedAt)}</span>` : ""}
+        </p>
+      `;
             main.onclick = () => openNote(note._id);
 
             const actions = document.createElement("div");
@@ -801,7 +844,6 @@
             notesListEl.appendChild(item);
           });
       }
-
       // --- CORE ACTIONS ---
       async function saveNote() {
         const text = composerInput.value.trim();
