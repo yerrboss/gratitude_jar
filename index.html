@@ -161,24 +161,24 @@
         transform-origin: center;
       }
 
-@keyframes note-drop {
-  0% {
-    opacity: 0;
-    transform: translateY(-60px) rotate(-8deg) scale(0.7);
-  }
-  50% {
-    opacity: 1;
-    transform: translateY(10px) rotate(2deg) scale(1.05);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0) rotate(-2deg) scale(1);
-  }
-}
+      @keyframes note-drop {
+        0% {
+          opacity: 0;
+          transform: translateY(-60px) rotate(-8deg) scale(0.7);
+        }
+        50% {
+          opacity: 1;
+          transform: translateY(10px) rotate(2deg) scale(1.05);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) rotate(-2deg) scale(1);
+        }
+      }
 
-  .jar-note-paper.is-dropping {
-  animation: note-drop 450ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
-}
+      .jar-note-paper.is-dropping {
+        animation: note-drop 450ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+      }
 
       .jar-streak {
         margin-top: 12px;
@@ -493,36 +493,36 @@
         opacity: 0.75;
       }
 
-.note-meta span {
-  display: block;
-}
+      .note-meta span {
+        display: block;
+      }
 
-.note-list-item {
-  display: flex !important;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 12px;
-}
+      .note-list-item {
+        display: flex !important;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 12px;
+      }
 
-.note-timestamp {
-  font-size: 11px;
-  color: #bbb;
-  padding: 4px 8px;
-  background: rgba(245, 242, 235, 0.08);
-  border-radius: 6px;
-  white-space: nowrap;
-  align-self: flex-start;
-}
-.note-list-actions {
-  display: flex !important;
-  flex-direction: column !important;
-  gap: 4px !important;
-}
+      .note-timestamp {
+        font-size: 11px;
+        color: #bbb;
+        padding: 4px 8px;
+        background: rgba(245, 242, 235, 0.08);
+        border-radius: 6px;
+        white-space: nowrap;
+        align-self: flex-start;
+      }
+      .note-list-actions {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 4px !important;
+      }
 
-.primary-btn.saving {
-  opacity: 0.7;
-  cursor: not-allowed;
-}
+      .primary-btn.saving {
+        opacity: 0.7;
+        cursor: not-allowed;
+      }
     </style>
   </head>
   <body>
@@ -735,260 +735,300 @@
             alert("Error: " + (await res.text()));
           }
         } catch (err) {
-          alert("Cannot connect to server.");
+          console.error(err);
+          alert("Server error: " + err.message);
         }
-      }
 
-      function showApp() {
-        authScreen.style.display = "none";
-        appContainer.style.display = "flex";
-        syncNotes();
-      }
-
-      function logout() {
-        localStorage.removeItem("jar_token");
-        window.location.reload();
-      }
-
-      // --- API DATA ---
-      async function syncNotes() {
-        if (!TOKEN) return;
-        try {
-          const res = await fetch(`${API_URL}/notes`, {
-            headers: { Authorization: TOKEN },
-          });
-          if (res.status === 401) return logout();
-          notes = await res.json();
-          renderJar();
-          if (currentView === "list") renderList();
-        } catch (e) {
-          console.error("Sync Error:", e);
+        function showApp() {
+          authScreen.style.display = "none";
+          appContainer.style.display = "flex";
+          syncNotes();
         }
-      }
 
-      // --- UI RENDERING ---
-      function setView(view) {
-        currentView = view;
-        viewJar.classList.toggle("is-active", view === "jar");
-        viewList.classList.toggle("is-active", view === "list");
-        document
-          .querySelectorAll(".nav-btn[data-view]")
-          .forEach((btn) =>
-            btn.classList.toggle("is-active", btn.dataset.view === view),
-          );
-        view === "jar" ? renderJar() : renderList();
-      }
-
-      function renderJar() {
-        if (!jarNotesLayer) return;
-        jarNotesLayer.innerHTML = "";
-        const density = Math.min(notes.length, 12);
-        for (let i = 0; i < density; i++) {
-          const div = document.createElement("div");
-          div.className = "jar-note-paper";
-          const row = Math.floor(i / 4);
-          const col = i % 4;
-          div.style.bottom = row * 18 + "px";
-          div.style.left = 8 + col * 32 + "px";
-          div.style.transform = `rotate(${(Math.random() - 0.5) * 10}deg)`;
-          jarNotesLayer.appendChild(div);
+        function logout() {
+          localStorage.removeItem("jar_token");
+          window.location.reload();
         }
-        jarStreakEl.textContent = getStreak() + "-day streak of gratitude";
-      }
 
-function formatDateTime(dateString) {
-  return new Date(dateString).toLocaleString();
-}
-
-function escapeHtml(str) {
-  const div = document.createElement("div");
-  div.textContent = str;
-  return div.innerHTML;
-}
-
-function snippet(str, max) {
-  return str.length > max ? str.slice(0, max) + "…" : str;
-}
-
-function renderList() {
-  const query = (searchInput.value || "").trim().toLowerCase();
-  const filtered = notes.filter((n) =>
-    n.text.toLowerCase().includes(query),
-  );
-  notesListEl.innerHTML = "";
-
-  filtered
-    .sort((a, b) => new Date(b.lastUpdated || b.updatedAt || b.createdAt) - new Date(a.lastUpdated || a.updatedAt || a.createdAt))
-    .forEach((note) => {
-      const item = document.createElement("article");
-      item.className = "note-list-item";
-      item.style.display = "flex";
-      item.style.alignItems = "flex-start";
-      item.style.gap = "8px";
-
-      // TEXT (leftmost)
-      const textDiv = document.createElement("div");
-      textDiv.style.flex = "1";
-      textDiv.innerHTML = `<p class="note-list-text">${escapeHtml(snippet(note.text, 100))}</p>`;
-      textDiv.onclick = () => openNote(note._id);
-
-      // TIMESTAMP (RIGHT of text, LEFT of buttons)
-      const timestampDiv = document.createElement("div");
-      timestampDiv.className = "note-timestamp";
-      const ts = note.lastUpdated || note.updatedAt || note.createdAt;
-      timestampDiv.innerHTML = `🕒 ${formatDateTime(ts)}`;
-      timestampDiv.style.flexShrink = "0";
-      timestampDiv.style.cursor = "pointer";
-      timestampDiv.onclick = (e) => {
-        e.stopPropagation();
-        navigator.clipboard.writeText(formatDateTime(ts));
-        timestampDiv.innerHTML = "📋 Copied!";
-        setTimeout(() => timestampDiv.innerHTML = `🕒 ${formatDateTime(ts)}`, 1500);
-      };
-
-      // BUTTONS (rightmost)
-      const actions = document.createElement("div");
-      actions.className = "note-list-actions";
-      actions.style.display = "flex";
-      actions.style.flexDirection = "column";
-      actions.style.gap = "4px";
-      actions.style.flexShrink = "0";
-
-      const editBtn = document.createElement("button");
-      editBtn.className = "note-action-btn edit";
-      editBtn.textContent = "Edit";
-      editBtn.onclick = (e) => {
-        e.stopPropagation();
-        startEditNote(note._id);
-      };
-
-      const deleteBtn = document.createElement("button");
-      deleteBtn.className = "note-action-btn delete";
-      deleteBtn.textContent = "Delete";
-      deleteBtn.onclick = (e) => {
-        e.stopPropagation();
-        deleteNote(note._id);
-      };
-
-      actions.appendChild(editBtn);
-      actions.appendChild(deleteBtn);
-      
-      item.appendChild(textDiv);
-      item.appendChild(timestampDiv);
-      item.appendChild(actions);
-      notesListEl.appendChild(item);
-    });
-}     
-let isSaving = false;  // Prevent duplicates
-
-async function saveNote() {
-  if (isSaving) return;  // Block duplicates
-  const text = composerInput.value.trim();
-  if (!text) return;
-
-  isSaving = true;  // Lock
-
-  const method = currentNoteId ? "PUT" : "POST";
-  const url = currentNoteId ? `${API_URL}/notes/${currentNoteId}` : `${API_URL}/notes`;
-  const body = currentNoteId ? { newText: text } : { text };
-
-  try {
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json", Authorization: TOKEN },
-      body: JSON.stringify(body),
-    });
-
-    if (res.ok) {
-      composerOverlay.classList.remove("is-open");
-      currentNoteId = null;
-      composerInput.value = "";
-      await syncNotes();
-      if (method === "POST") addDropEffect();
-    } else {
-      alert("Save failed.");
-    }
-  } catch (e) {
-    alert("Server connection error.");
-  } finally {
-    isSaving = false;  // Unlock
-  }
-}
-      async function deleteNote(id) {
-        if (!confirm("Are you sure you want to delete this note?")) return;
-        try {
-          const res = await fetch(`${API_URL}/notes/${id}`, {
-            method: "DELETE",
-            headers: { Authorization: TOKEN },
-          });
-          if (res.ok) {
-            await syncNotes();
-          } else {
-            alert(
-              "Delete failed on server. Make sure your server is running and updated.",
-            );
+        // --- API DATA ---
+        async function syncNotes() {
+          if (!TOKEN) return;
+          try {
+            const res = await fetch(`${API_URL}/notes`, {
+              headers: { Authorization: TOKEN },
+            });
+            if (res.status === 401) return logout();
+            notes = await res.json();
+            renderJar();
+            if (currentView === "list") renderList();
+          } catch (e) {
+            console.error("Sync Error:", e);
           }
-        } catch (e) {
-          console.error("Delete Error:", e);
         }
-      }
 
-      function startEditNote(id) {
-        const note = notes.find((n) => n._id === id);
-        if (!note) return;
-        currentNoteId = id;
-        composerInput.value = note.text;
-        composerOverlay.classList.add("is-open");
-        setTimeout(() => composerInput.focus(), 50);
-      }
-
-      function openNote(id) {
-        const note = notes.find((n) => n._id === id);
-        if (!note) return;
-        noteTextEl.textContent = note.text;
-        noteOverlay.classList.add("is-open");
-      }
-
-      // --- HELPERS ---
-      function getStreak() {
-        if (!notes.length) return 0;
-        const days = new Set(
-          notes.map((n) => new Date(n.createdAt).toDateString()),
-        );
-        let streak = 0,
-          cursor = new Date();
-        while (days.has(cursor.toDateString())) {
-          streak++;
-          cursor.setDate(cursor.getDate() - 1);
+        // --- UI RENDERING ---
+        function setView(view) {
+          currentView = view;
+          viewJar.classList.toggle("is-active", view === "jar");
+          viewList.classList.toggle("is-active", view === "list");
+          document
+            .querySelectorAll(".nav-btn[data-view]")
+            .forEach((btn) =>
+              btn.classList.toggle("is-active", btn.dataset.view === view),
+            );
+          view === "jar" ? renderJar() : renderList();
         }
-        return streak;
+
+        function renderJar() {
+          if (!jarNotesLayer) return;
+          jarNotesLayer.innerHTML = "";
+          const density = Math.min(notes.length, 12);
+          for (let i = 0; i < density; i++) {
+            const div = document.createElement("div");
+            div.className = "jar-note-paper";
+            const row = Math.floor(i / 4);
+            const col = i % 4;
+            div.style.bottom = row * 18 + "px";
+            div.style.left = 8 + col * 32 + "px";
+            div.style.transform = `rotate(${(Math.random() - 0.5) * 10}deg)`;
+            jarNotesLayer.appendChild(div);
+          }
+          jarStreakEl.textContent = getStreak() + "-day streak of gratitude";
+        }
+
+        function formatDateTime(dateString) {
+          return new Date(dateString).toLocaleString();
+        }
+
+        function escapeHtml(str) {
+          const div = document.createElement("div");
+          div.textContent = str;
+          return div.innerHTML;
+        }
+
+        function snippet(str, max) {
+          return str.length > max ? str.slice(0, max) + "…" : str;
+        }
+
+        function renderList() {
+          const query = (searchInput.value || "").trim().toLowerCase();
+          const filtered = notes.filter((n) =>
+            n.text.toLowerCase().includes(query),
+          );
+          notesListEl.innerHTML = "";
+
+          filtered
+            .sort(
+              (a, b) =>
+                new Date(b.lastUpdated || b.updatedAt || b.createdAt) -
+                new Date(a.lastUpdated || a.updatedAt || a.createdAt),
+            )
+            .forEach((note) => {
+              const item = document.createElement("article");
+              item.className = "note-list-item";
+              item.style.display = "flex";
+              item.style.alignItems = "flex-start";
+              item.style.gap = "8px";
+
+              // TEXT (leftmost)
+              const textDiv = document.createElement("div");
+              textDiv.style.flex = "1";
+              textDiv.innerHTML = `<p class="note-list-text">${escapeHtml(snippet(note.text, 100))}</p>`;
+              textDiv.onclick = () => openNote(note._id);
+
+              // TIMESTAMP (RIGHT of text, LEFT of buttons)
+              const timestampDiv = document.createElement("div");
+              timestampDiv.className = "note-timestamp";
+              const ts = note.lastUpdated || note.updatedAt || note.createdAt;
+              timestampDiv.innerHTML = `🕒 ${formatDateTime(ts)}`;
+              timestampDiv.style.flexShrink = "0";
+              timestampDiv.style.cursor = "pointer";
+              timestampDiv.onclick = (e) => {
+                e.stopPropagation();
+                navigator.clipboard.writeText(formatDateTime(ts));
+                timestampDiv.innerHTML = "📋 Copied!";
+                setTimeout(
+                  () => (timestampDiv.innerHTML = `🕒 ${formatDateTime(ts)}`),
+                  1500,
+                );
+              };
+
+              // BUTTONS (rightmost)
+              const actions = document.createElement("div");
+              actions.className = "note-list-actions";
+              actions.style.display = "flex";
+              actions.style.flexDirection = "column";
+              actions.style.gap = "4px";
+              actions.style.flexShrink = "0";
+
+              const editBtn = document.createElement("button");
+              editBtn.className = "note-action-btn edit";
+              editBtn.textContent = "Edit";
+              editBtn.onclick = (e) => {
+                e.stopPropagation();
+                startEditNote(note._id);
+              };
+
+              const deleteBtn = document.createElement("button");
+              deleteBtn.className = "note-action-btn delete";
+              deleteBtn.textContent = "Delete";
+              deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                deleteNote(note._id);
+              };
+
+              actions.appendChild(editBtn);
+              actions.appendChild(deleteBtn);
+
+              item.appendChild(textDiv);
+              item.appendChild(timestampDiv);
+              item.appendChild(actions);
+              notesListEl.appendChild(item);
+            });
+        }
+        let isSaving = false; // Prevent duplicates
+
+        async function saveNote() {
+          if (isSaving) return; // Block duplicates
+          const text = composerInput.value.trim();
+          if (!text) return;
+
+          isSaving = true; // Lock
+
+          const method = currentNoteId ? "PUT" : "POST";
+          const url = currentNoteId
+            ? `${API_URL}/notes/${currentNoteId}`
+            : `${API_URL}/notes`;
+          const body = currentNoteId ? { newText: text } : { text };
+
+          try {
+            const res = await fetch(url, {
+              method,
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: TOKEN,
+              },
+              body: JSON.stringify(body),
+            });
+
+            if (res.ok) {
+              composerOverlay.classList.remove("is-open");
+              currentNoteId = null;
+              composerInput.value = "";
+              await syncNotes();
+              if (method === "POST") addDropEffect();
+            } else {
+              alert("Save failed.");
+            }
+          } catch (e) {
+            alert("Server connection error.");
+          } finally {
+            isSaving = false; // Unlock
+          }
+        }
+        async function deleteNote(id) {
+          if (!confirm("Are you sure you want to delete this note?")) return;
+          try {
+            const res = await fetch(`${API_URL}/notes/${id}`, {
+              method: "DELETE",
+              headers: { Authorization: TOKEN },
+            });
+            if (res.ok) {
+              await syncNotes();
+            } else {
+              alert(
+                "Delete failed on server. Make sure your server is running and updated.",
+              );
+            }
+          } catch (e) {
+            console.error("Delete Error:", e);
+          }
+        }
+
+        function startEditNote(id) {
+          const note = notes.find((n) => n._id === id);
+          if (!note) return;
+          currentNoteId = id;
+          composerInput.value = note.text;
+          composerOverlay.classList.add("is-open");
+          setTimeout(() => composerInput.focus(), 50);
+        }
+
+        function openNote(id) {
+          const note = notes.find((n) => n._id === id);
+          if (!note) return;
+          noteTextEl.textContent = note.text;
+          noteOverlay.classList.add("is-open");
+        }
+
+        // --- HELPERS ---
+        function getStreak() {
+          if (!notes.length) return 0;
+          const days = new Set(
+            notes.map((n) => new Date(n.createdAt).toDateString()),
+          );
+          let streak = 0,
+            cursor = new Date();
+          while (days.has(cursor.toDateString())) {
+            streak++;
+            cursor.setDate(cursor.getDate() - 1);
+          }
+          return streak;
+        }
+        function escapeHtml(str) {
+          const div = document.createElement("div");
+          div.textContent = str;
+          return div.innerHTML;
+        }
+        function snippet(str, max) {
+          return str.length > max ? str.slice(0, max) + "…" : str;
+        }
+        function addDropEffect() {
+          const paper = document.createElement("div");
+          paper.className = "jar-note-paper is-dropping";
+          paper.style.position = "absolute";
+          paper.style.left = "50%";
+          paper.style.bottom = "140px";
+          paper.style.transform = "translateX(-50%)";
+          paper.style.opacity = "0";
+          paper.style.zIndex = "10";
+          jarNotesLayer.appendChild(paper);
+
+          // Trigger animation
+          requestAnimationFrame(() => {
+            paper.style.opacity = "1";
+            paper.style.transition =
+              "all 450ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
+          });
+
+          // PERFECT cleanup timing
+          setTimeout(() => {
+            if (paper.parentNode) {
+              paper.style.opacity = "0";
+              setTimeout(() => {
+                if (paper.parentNode) paper.remove();
+                renderJar(); // Refresh AFTER animation
+              }, 100);
+            }
+          }, 450);
+        }
+        const paper = document.createElement("div");
+        paper.className = "jar-note-paper is-dropping";
+        paper.style.left = "50%";
+        paper.style.bottom = "140px";
+        paper.style.transform = "translateX(-50%) rotate(0deg)";
+        paper.style.opacity = "0"; // Start invisible
+        jarNotesLayer.appendChild(paper);
+
+        // Smooth animation + cleanup
+        requestAnimationFrame(() => {
+          paper.style.opacity = "1";
+        });
+        setTimeout(() => {
+          paper.remove(); // Clean up dropped note
+          renderJar(); // Refresh jar
+        }, 450);
       }
-      function escapeHtml(str) {
-        const div = document.createElement("div");
-        div.textContent = str;
-        return div.innerHTML;
-      }
-      function snippet(str, max) {
-        return str.length > max ? str.slice(0, max) + "…" : str;
-      }
-function addDropEffect() {
-  const paper = document.createElement("div");
-  paper.className = "jar-note-paper is-dropping";
-  paper.style.left = "50%";
-  paper.style.bottom = "140px";
-  paper.style.transform = "translateX(-50%) rotate(0deg)";
-  paper.style.opacity = "0";  // Start invisible
-  jarNotesLayer.appendChild(paper);
-  
-  // Smooth animation + cleanup
-  requestAnimationFrame(() => {
-    paper.style.opacity = "1";
-  });
-  setTimeout(() => {
-    paper.remove();  // Clean up dropped note
-    renderJar();     // Refresh jar
-  }, 450);
-}
       // --- LISTENERS ---
       document.querySelectorAll(".nav-btn[data-view]").forEach((btn) => {
         btn.onclick = () => setView(btn.dataset.view);
@@ -1000,14 +1040,14 @@ function addDropEffect() {
         composerInput.value = "";
         composerOverlay.classList.add("is-open");
       };
-document.getElementById("btn-save-composer").onclick = async () => {
-  const btn = document.getElementById("btn-save-composer");
-  btn.classList.add("saving");
-  btn.textContent = "Saving...";
-  await saveNote();
-  btn.classList.remove("saving");
-  btn.textContent = "Save";
-};
+      document.getElementById("btn-save-composer").onclick = async () => {
+        const btn = document.getElementById("btn-save-composer");
+        btn.classList.add("saving");
+        btn.textContent = "Saving...";
+        await saveNote();
+        btn.classList.remove("saving");
+        btn.textContent = "Save";
+      };
       document.getElementById("btn-draw-note").onclick = () => {
         if (!notes.length) return;
         const random = notes[Math.floor(Math.random() * notes.length)];
