@@ -1,0 +1,7 @@
+{
+  "version": 2,
+  "name": "gratitude-jar",
+  "builds": [
+    { "src": "index.html", "use": "@vercel/static" }
+  ]
+}
