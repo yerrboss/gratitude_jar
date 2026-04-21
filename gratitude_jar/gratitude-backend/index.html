@@ -692,14 +692,15 @@
       import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-auth.js";
       import { getFirestore, collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.9.0/firebase-firestore.js";
 
-      // TODO: Replace this with your actual Firebase configuration object
+      // Your web app's Firebase configuration
       const firebaseConfig = {
-        apiKey: "YOUR_API_KEY",
-        authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
-        projectId: "YOUR_PROJECT_ID",
-        storageBucket: "YOUR_PROJECT_ID.appspot.com",
-        messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-        appId: "YOUR_APP_ID"
+        apiKey: "AIzaSyAIIbvvIgOnxttH0d4h_hPb4Mb2xRK4pOs",
+        authDomain: "gratitude-jar-3a61d.firebaseapp.com",
+        projectId: "gratitude-jar-3a61d",
+        storageBucket: "gratitude-jar-3a61d.firebasestorage.app",
+        messagingSenderId: "897552344850",
+        appId: "1:897552344850:web:86703d01735fae3ca375cb",
+        measurementId: "G-5DD0SVPLQ3"
       };
 
       const app = initializeApp(firebaseConfig);
