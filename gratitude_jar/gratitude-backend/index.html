@@ -776,7 +776,7 @@
           const q = query(
             collection(db, "notes"), 
             where("userId", "==", currentUser.uid),
-            orderBy("lastUpdated", "desc")
+
           );
           const querySnapshot = await getDocs(q);
           notes = querySnapshot.docs.map(doc => ({
