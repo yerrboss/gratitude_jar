@@ -164,15 +164,15 @@
       @keyframes note-drop {
         0% {
           opacity: 0;
-          transform: translateY(-60px) rotate(-8deg) scale(0.7);
+          transform: translateX(-50%) translateY(-60px) rotate(-8deg) scale(0.7);
         }
         50% {
           opacity: 1;
-          transform: translateY(10px) rotate(2deg) scale(1.05);
+          transform: translateX(-50%) translateY(10px) rotate(2deg) scale(1.05);
         }
         100% {
           opacity: 1;
-          transform: translateY(0) rotate(-2deg) scale(1);
+          transform: translateX(-50%) translateY(0) rotate(-2deg) scale(1);
         }
       }
 
@@ -934,8 +934,15 @@
           const wasEditing = !!currentNoteId;
           currentNoteId = null;
           composerInput.value = "";
-          await syncNotes();
-          if (!wasEditing) addDropEffect();
+          
+          if (!wasEditing) {
+            addDropEffect();
+            setTimeout(async () => {
+              await syncNotes();
+            }, 450);
+          } else {
+            await syncNotes();
+          }
         } catch (e) {
           console.error("Save Error:", e);
           alert("Server connection error.");
@@ -992,26 +999,13 @@
         paper.style.position = "absolute";
         paper.style.left = "50%";
         paper.style.bottom = "140px";
-        paper.style.transform = "translateX(-50%)";
-        paper.style.opacity = "0";
         paper.style.zIndex = "10";
         jarNotesLayer.appendChild(paper);
-
-        // Trigger animation
-        requestAnimationFrame(() => {
-          paper.style.opacity = "1";
-          paper.style.transition =
-            "all 450ms cubic-bezier(0.25, 0.46, 0.45, 0.94)";
-        });
 
         // PERFECT cleanup timing
         setTimeout(() => {
           if (paper.parentNode) {
-            paper.style.opacity = "0";
-            setTimeout(() => {
-              if (paper.parentNode) paper.remove();
-              renderJar(); // Refresh AFTER animation
-            }, 100);
+            paper.remove();
           }
         }, 450);
       }
