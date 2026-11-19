@@ -248,31 +248,34 @@
 
       .jar-note-paper {
         position: absolute;
-        width: 80px;
-        height: 40px;
-        background: #f5f2eb;
+        width: 78px;
+        height: 36px;
+        background: linear-gradient(180deg, #faf7f0 0%, #ede6d6 100%);
+        border: 1px solid rgba(59, 53, 42, 0.14);
         border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.35);
+        box-shadow: 0 3px 6px rgba(0, 0, 0, 0.35);
         transform-origin: center;
+        transition: transform 240ms ease;
       }
 
-      @keyframes note-drop {
+      @keyframes note-settle-drop {
         0% {
           opacity: 0;
-          transform: translateX(-50%) translateY(-60px) rotate(-8deg) scale(0.7);
+          transform: translateY(-150px) rotate(var(--start-rot, -7deg)) scale(0.88);
         }
-        50% {
+        68% {
           opacity: 1;
-          transform: translateX(-50%) translateY(10px) rotate(2deg) scale(1.05);
+          transform: translateY(5px) rotate(calc(var(--end-rot, 0deg) * 1.35)) scale(1.02);
         }
         100% {
           opacity: 1;
-          transform: translateX(-50%) translateY(0) rotate(-2deg) scale(1);
+          transform: translateY(0) rotate(var(--end-rot, 0deg)) scale(1);
         }
       }
 
       .jar-note-paper.is-dropping {
-        animation: note-drop 450ms cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        animation: note-settle-drop 620ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        z-index: 5;
       }
 
       .jar-streak {
@@ -771,8 +774,12 @@
       let notes = [];
       let currentView = "jar";
       let currentNoteId = null;
+      let droppingNoteKey = null;
       let isSaving = false;
       let statusTimer = null;
+
+      // Deterministic paper angles so existing slips never jump when a new note drops
+      const NOTE_ANGLES = [-4, 3, -2, 5, -5, 2, -3, 4, -2, 3, -4, 2];
 
       // --- SELECTORS ---
       const authScreen = document.getElementById("auth-screen");
@@ -863,7 +870,7 @@
       }
 
       // --- API DATA ---
-      async function syncNotes() {
+      async function syncNotes({ preserveDropping = false } = {}) {
         if (!currentUser) return;
         try {
           const q = query(
@@ -881,7 +888,7 @@
             }))
             .sort((a, b) => b.lastUpdated - a.lastUpdated);
 
-          renderJar();
+          renderJar({ skipDrop: preserveDropping });
           if (currentView === "list") renderList();
         } catch (e) {
           console.error("Sync Error:", e);
@@ -900,24 +907,44 @@
             btn.classList.toggle("is-active", btn.dataset.view === view)
           );
         if (view === "jar") {
-          renderJar();
+          renderJar({ skipDrop: true });
         } else {
           renderList();
         }
       }
 
-      function renderJar() {
+      function renderJar({ skipDrop = false } = {}) {
         if (!jarNotesLayer) return;
         jarNotesLayer.innerHTML = "";
         const density = Math.min(notes.length, 12);
+
         for (let i = 0; i < density; i++) {
+          const note = notes[i];
           const div = document.createElement("div");
           div.className = "jar-note-paper";
           const row = Math.floor(i / 4);
           const col = i % 4;
-          div.style.bottom = `${row * 18}px`;
-          div.style.left = `${8 + col * 32}px`;
-          div.style.transform = `rotate(${(Math.random() - 0.5) * 10}deg)`;
+          const angle = NOTE_ANGLES[i % NOTE_ANGLES.length];
+
+          div.style.bottom = `${row * 16}px`;
+          div.style.left = `${6 + col * 31}px`;
+          div.style.setProperty("--end-rot", `${angle}deg`);
+          div.style.setProperty("--start-rot", `${angle - 6}deg`);
+          div.style.transform = `rotate(${angle}deg)`;
+
+          const noteKey = note?._id;
+          if (!skipDrop && droppingNoteKey && noteKey === droppingNoteKey) {
+            div.classList.add("is-dropping");
+            div.addEventListener(
+              "animationend",
+              () => {
+                div.classList.remove("is-dropping");
+                div.style.transform = `rotate(${angle}deg)`;
+              },
+              { once: true }
+            );
+          }
+
           jarNotesLayer.appendChild(div);
         }
 
@@ -1024,38 +1051,64 @@
         saveBtn.disabled = true;
         saveBtn.textContent = "Saving...";
 
+        const wasEditing = !!currentNoteId;
+        const editingId = currentNoteId;
+
         try {
-          if (currentNoteId) {
-            await updateDoc(doc(db, "notes", currentNoteId), {
+          if (wasEditing) {
+            await updateDoc(doc(db, "notes", editingId), {
               text,
               lastUpdated: serverTimestamp()
             });
+            currentNoteId = null;
+            composerInput.value = "";
+            composerOverlay.classList.remove("is-open");
             showStatus("Note updated.");
+            await syncNotes({ preserveDropping: true });
           } else {
-            await addDoc(collection(db, "notes"), {
+            const tempId = `temp-${Date.now()}`;
+            const optimisticNote = {
+              _id: tempId,
+              text,
+              userId: currentUser.uid,
+              lastUpdated: new Date()
+            };
+
+            notes = [optimisticNote, ...notes];
+            droppingNoteKey = tempId;
+            currentNoteId = null;
+            composerInput.value = "";
+            composerOverlay.classList.remove("is-open");
+
+            // Ensure jar view is visible when dropping a new note
+            if (currentView !== "jar") {
+              setView("jar");
+            } else {
+              renderJar();
+            }
+
+            const docRef = await addDoc(collection(db, "notes"), {
               text,
               userId: currentUser.uid,
               lastUpdated: serverTimestamp()
             });
+
+            if (droppingNoteKey === tempId) {
+              droppingNoteKey = docRef.id;
+            }
+
             showStatus("Added a note to your jar.");
-          }
-
-          const wasEditing = !!currentNoteId;
-          currentNoteId = null;
-          composerInput.value = "";
-          composerOverlay.classList.remove("is-open");
-
-          if (!wasEditing) {
-            addDropEffect();
-            setTimeout(async () => {
-              await syncNotes();
-            }, 450);
-          } else {
-            await syncNotes();
+            setTimeout(() => {
+              if (droppingNoteKey === docRef.id) {
+                droppingNoteKey = null;
+              }
+              syncNotes({ preserveDropping: true });
+            }, 650);
           }
         } catch (e) {
           console.error("Save Error:", e);
           showStatus("Could not save note right now.", true);
+          await syncNotes({ preserveDropping: true });
         } finally {
           isSaving = false;
           saveBtn.classList.remove("saving");
@@ -1069,7 +1122,7 @@
         try {
           await deleteDoc(doc(db, "notes", id));
           notes = notes.filter((n) => n._id !== id);
-          renderJar();
+          renderJar({ skipDrop: true });
           renderList();
           showStatus("Note deleted.");
         } catch (e) {
@@ -1113,22 +1166,6 @@
           cursor.setDate(cursor.getDate() - 1);
         }
         return streak;
-      }
-
-      function addDropEffect() {
-        if (!jarNotesLayer) return;
-        const paper = document.createElement("div");
-        paper.className = "jar-note-paper is-dropping";
-        paper.style.left = "50%";
-        paper.style.bottom = "140px";
-        paper.style.zIndex = "10";
-        jarNotesLayer.appendChild(paper);
-
-        setTimeout(() => {
-          if (paper.parentNode) {
-            paper.remove();
-          }
-        }, 450);
       }
 
       // --- LISTENERS ---
